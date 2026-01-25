@@ -18,10 +18,8 @@ def login(username, password):
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
     
-    # UNSAFE: Using f-strings for SQL query construction
-    # Attacker can inject SQL: username = "admin' OR '1'='1"
-    query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"
-    cursor.execute(query)
+    query = "SELECT * FROM users WHERE username = ? AND password = ?"
+    cursor.execute(query, (username, password))
     
     user = cursor.fetchone()
     conn.close()
@@ -37,11 +35,8 @@ def ping_server(ip_address):
     Network diagnostic tool
     Vulnerable to command injection through shell=True
     """
-    # UNSAFE: Passing user input directly to shell command
-    # Attacker can inject commands: ip_address = "8.8.8.8; cat /etc/passwd"
     result = subprocess.run(
-        f"ping -c 1 {ip_address}", 
-        shell=True, 
+        ["ping", "-c", "1", ip_address], 
         capture_output=True,
         text=True
     )
@@ -59,12 +54,12 @@ def read_user_file(filename):
     File reader for user uploads
     Vulnerable to path traversal attacks
     """
-    # UNSAFE: No validation on user-supplied filename
-    # Attacker can access any file: filename = "../../etc/passwd"
-    file_path = f"uploads/{filename}"
+    safe_path = os.path.abspath(os.path.join("uploads", filename))
+    if not safe_path.startswith(os.path.abspath("uploads/")):
+        raise ValueError("Invalid path")
     
     try:
-        with open(file_path, 'r') as f:
+        with open(safe_path, 'r') as f:
             content = f.read()
         return {"status": "success", "content": content}
     except FileNotFoundError:
@@ -82,9 +77,8 @@ def search_products(search_term):
     conn = sqlite3.connect('products.db')
     cursor = conn.cursor()
     
-    # UNSAFE: String concatenation in SQL
-    query = "SELECT * FROM products WHERE name LIKE '%" + search_term + "%'"
-    cursor.execute(query)
+    query = "SELECT * FROM products WHERE name LIKE ?"
+    cursor.execute(query, ('%' + search_term + '%',))
     
     results = cursor.fetchall()
     conn.close()
@@ -100,9 +94,8 @@ def get_user_data(user_id):
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
     
-    # UNSAFE: Direct interpolation without type checking
-    query = f"SELECT * FROM users WHERE id = {user_id}"
-    cursor.execute(query)
+    query = "SELECT * FROM users WHERE id = ?"
+    cursor.execute(query, (user_id,))
     
     user = cursor.fetchone()
     conn.close()
