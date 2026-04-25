@@ -1,102 +1,84 @@
-#include <iostream>
-#include <cstring>
-#include <cstdlib>
-#include <cstdio>
-#include <fstream>
-#include <thread>
-#include <climits>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
-using namespace std;
-
-void bufferOverflow(const char* input) {
-    char buffer[10];
-    strcpy(buffer, input);
+void double_free() {
+    char *p = malloc(32);
+    free(p);
+    free(p);
 }
 
-void heapOverflow() {
-    char* ptr = (char*)malloc(10);
-    strcpy(ptr, "This string is too long for heap");
-    free(ptr);
-}
-
-void stackOverflow() {
-    stackOverflow();
-}
-
-void useAfterFree() {
-    int* ptr = new int(10);
-    delete ptr;
-    cout << *ptr << endl;
-}
-
-void formatString(char* userInput) {
-    printf(userInput);
-}
-
-void integerOverflow() {
-    int a = INT_MAX;
-    int b = a + 1;
-    cout << b << endl;
-}
-
-void commandInjection(const string& user) {
-    string cmd = "ls " + user;
-    system(cmd.c_str());
-}
-
-void pathTraversal(const string& filename) {
-    ifstream file("/var/www/" + filename);
-}
-
-void sqlInjection(const char* username) {
-    char query[256];
-    sprintf(query, "SELECT * FROM users WHERE name='%s'", username);
-    cout << query << endl;
-}
-
-void nullPointer() {
-    int* ptr = nullptr;
-    cout << *ptr << endl;
-}
-
-void memoryLeak() {
-    int* ptr = new int[100];
-}
-
-int shared = 0;
-void raceCondition() {
-    for (int i = 0; i < 100000; i++) {
-        shared++;
+void off_by_one(char *input) {
+    char buf[10];
+    for (int i = 0; i <= 10; i++) {
+        buf[i] = input[i];
     }
 }
 
-void unsafeDeserialization(const string& file) {
-    ifstream in(file);
-    string data;
-    in >> data;
+void uninitialized_memory() {
+    int x;
+    printf("%d\n", x);
 }
 
-int main(int argc, char* argv[]) {
+void insecure_temp_file() {
+    char filename[] = "/tmp/tmpfileXXXXXX";
+    mktemp(filename);
+    FILE *f = fopen(filename, "w");
+    if (f) {
+        fputs("data", f);
+        fclose(f);
+    }
+}
+
+void symlink_attack(char *file) {
+    FILE *f = fopen(file, "w");
+    if (f) {
+        fputs("test", f);
+        fclose(f);
+    }
+}
+
+void improper_authentication(int isAdmin) {
+    if (isAdmin == 1) {
+        system("echo Admin access granted");
+    }
+}
+
+void environment_injection() {
+    char *path = getenv("PATH");
+    system(path);
+}
+
+void weak_random() {
+    int r = rand();
+    printf("%d\n", r);
+}
+
+void file_descriptor_leak() {
+    int fd = open("file.txt", O_RDONLY);
+}
+
+void improper_bounds() {
+    int arr[5];
+    int index = 10;
+    arr[index] = 1;
+}
+
+int main(int argc, char *argv[]) {
     if (argc > 1) {
-        bufferOverflow(argv[1]);
-        formatString(argv[1]);
-        sqlInjection(argv[1]);
-        commandInjection(argv[1]);
-        pathTraversal(argv[1]);
+        off_by_one(argv[1]);
+        symlink_attack(argv[1]);
     }
 
-    heapOverflow();
-    integerOverflow();
-    useAfterFree();
-    memoryLeak();
-    nullPointer();
-
-    thread t1(raceCondition);
-    thread t2(raceCondition);
-    t1.join();
-    t2.join();
-
-    unsafeDeserialization("input.txt");
+    double_free();
+    uninitialized_memory();
+    insecure_temp_file();
+    improper_authentication(1);
+    environment_injection();
+    weak_random();
+    file_descriptor_leak();
+    improper_bounds();
 
     return 0;
 }
