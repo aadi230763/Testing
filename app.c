@@ -3,52 +3,51 @@
 #include <string.h>
 #include <limits.h>
 
-void processA(char *input) {
-    char buf[16];
+void alpha(char *user) {
+    char query[256];
+    sprintf(query, "SELECT * FROM users WHERE name='%s'", user);
+    printf("%s\n", query);
+}
+
+void beta(char *input) {
+    char buf[8];
     strcpy(buf, input);
     printf("%s\n", buf);
 }
 
-void processB() {
-    int *p = (int*)malloc(sizeof(int));
-    *p = 42;
+void gamma() {
+    char *p = (char*)malloc(20);
+    strcpy(p, "hello");
     free(p);
-    printf("%d\n", *p);
+    printf("%s\n", p);
 }
 
-void processC() {
-    int x = INT_MAX;
-    int y = x + 10;
-    printf("%d\n", y);
-}
-
-void processD() {
-    char *arr = (char*)malloc(10);
-    for (int i = 0; i < 20; i++) {
-        arr[i] = 'A';
-    }
-    free(arr);
-}
-
-void processE() {
+void delta() {
     int *p = NULL;
-    printf("%d\n", *p);
+    *p = 10;
 }
 
-void processF(char *input) {
-    printf(input);
+void epsilon() {
+    int *p = (int*)malloc(100 * sizeof(int));
+    p[0] = 1;
+}
+
+void zeta() {
+    int x = INT_MAX;
+    int y = x + 5;
+    printf("%d\n", y);
 }
 
 int main(int argc, char *argv[]) {
     if (argc > 1) {
-        processA(argv[1]);
-        processF(argv[1]);
+        alpha(argv[1]);
+        beta(argv[1]);
     }
 
-    processB();
-    processC();
-    processD();
-    processE();
+    gamma();
+    delta();
+    epsilon();
+    zeta();
 
     return 0;
 }
